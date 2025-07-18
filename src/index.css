@@ -1,0 +1,130 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'antd/dist/reset.css';
+
+:root {
+  --primary-blue: #1E5D8C;
+  --primary-orange: #E6A623;
+  --light-gray: #F5F5F5;
+  --dark-gray: #666666;
+  --success-green: #52C41A;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background-color: #FFFFFF;
+  color: #333;
+}
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+}
+
+.auth-left {
+  background: linear-gradient(135deg, #1E5D8C 0%, #2E6DA4 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-left::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    polygon(30% 20%, 50% 30%, 40% 50%, 60% 40%),
+    polygon(70% 60%, 90% 70%, 80% 90%, 95% 80%);
+  opacity: 0.1;
+}
+
+.auth-right {
+  background-color: #FFFFFF;
+}
+
+.product-card {
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.sidebar-cart {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 400px;
+  background: white;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+
+.sidebar-cart.open {
+  transform: translateX(0);
+}
+
+.cart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.cart-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.quantity-btn {
+  border: 1px solid #d9d9d9;
+  background: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quantity-btn:hover {
+  border-color: var(--primary-orange);
+  color: var(--primary-orange);
+}
+
+.stars {
+  color: #FFD700;
+}
+
+.breadcrumb {
+  background: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ">";
+  color: #666;
+}
