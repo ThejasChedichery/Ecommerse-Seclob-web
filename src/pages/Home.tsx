@@ -36,7 +36,6 @@ interface Variant {
 }
 
 const { TextArea } = Input;
-const { Title, Text } = Typography;
 
 const Home: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -377,20 +376,7 @@ const Home: React.FC = () => {
             </div>
           )}
 
-          {/* Products Section */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <Title level={3}>
-                {searchQuery ? `Search Results for "${searchQuery}"` : 'Featured Products'}
-              </Title>
-              <Text type="secondary">
-                {searchQuery 
-                  ? `Found ${products.length} products matching your search`
-                  : 'Discover our latest collection of amazing products'
-                }
-              </Text>
-            </div>
-          </div>
+        
 
           {/* Products Grid */}
           {loading ? (
@@ -400,7 +386,7 @@ const Home: React.FC = () => {
           ) : products.length > 0 ? (
             <div className="row">
               {products.map((product: Product) => (
-                <div key={product._id} className="col-lg-4 col-md-6 mb-4">
+                <div key={product._id} className="col-lg-4 col-md-6 mb-4 mt-4">
                   <ProductCard product={product} />
                 </div>
               ))}

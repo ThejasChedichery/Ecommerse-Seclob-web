@@ -228,10 +228,7 @@ const ProductDetails: React.FC = () => {
 
   return (
     <div className="container" style={{ padding: '20px 0' }}>
-      {/* Debug Info - Remove this in production */}
-      <div style={{ background: '#f0f0f0', padding: '10px', marginBottom: '20px', fontSize: '12px' }}>
-        <strong>Debug Info:</strong> Product ID: {id} | Product Name: {product.name} | Price: ${product.price} | Images: {product.images?.length || 0} | Wishlist: {isInWishlist ? 'Yes' : 'No'}
-      </div>
+    
 
       {/* Breadcrumb */}
       <nav aria-label="breadcrumb">

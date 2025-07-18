@@ -219,10 +219,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               ${productPrice}
             </div>
             <Rate disabled defaultValue={productRating} style={{ fontSize: '14px' }} />
-            {/* Debug info - remove in production */}
-            <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
-              ID: {productId || 'undefined'} | Images: {product.images?.length || 0} | Wishlist: {isInWishlist ? 'Yes' : 'No'}
-            </div>
+            
           </div>
         }
       />
