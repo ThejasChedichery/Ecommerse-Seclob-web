@@ -53,8 +53,21 @@ const ProductDetails: React.FC = () => {
     try {
       const response = await wishlistAPI.getWishlistByUser(user.id);
       const wishlistData = response.data || response.wishlist || response;
-      const productIds = wishlistData.map((item: any) => item.productId || item.product?._id);
-      setIsInWishlist(productIds.includes(product._id));
+      
+      // Check if product is in wishlist based on the actual API structure
+      const isInWishlist = wishlistData.some((item: any) => {
+        // Handle both possible structures: productId (object) or productId (string)
+        if (item.productId && typeof item.productId === 'object') {
+          return item.productId._id === product._id;
+        } else if (item.productId && typeof item.productId === 'string') {
+          return item.productId === product._id;
+        } else if (item.product && item.product._id) {
+          return item.product._id === product._id;
+        }
+        return false;
+      });
+      
+      setIsInWishlist(isInWishlist);
     } catch (error) {
       console.error('Failed to check wishlist status:', error);
     }

@@ -9,13 +9,25 @@ import { useNavigate } from 'react-router-dom';
 interface WishlistItem {
   _id: string;
   userId: string;
-  productId: string;
-  product: {
+  productId?: {
     _id: string;
     name: string;
-    price: number;
-    image: string;
-    images?: string[];
+    description: string;
+    subCategoryId: string;
+    variants: Array<{ ram: string; price: number; quantity: number; _id: string }>;
+    images: string[];
+    createdAt: string;
+    updatedAt: string;
+  };
+  product?: {
+    _id: string;
+    name: string;
+    description: string;
+    subCategoryId: string;
+    variants: Array<{ ram: string; price: number; quantity: number; _id: string }>;
+    images: string[];
+    createdAt: string;
+    updatedAt: string;
   };
 }
 
@@ -58,30 +70,61 @@ const WishlistSidebar: React.FC<WishlistSidebarProps> = ({ isOpen, onClose }) =>
       console.log('WishlistSidebar: API response:', response);
       
       // Handle different possible response structures
-      let wishlistData;
-      if (response && typeof response === 'object') {
-        if (response.data) {
-          wishlistData = response.data;
-        } else if (response.wishlist) {
-          wishlistData = response.wishlist;
-        } else if (Array.isArray(response)) {
-          wishlistData = response;
+      let wishlistData = [];
+      
+      try {
+        if (response && typeof response === 'object') {
+          if (response.data && Array.isArray(response.data)) {
+            wishlistData = response.data;
+          } else if (response.wishlist && Array.isArray(response.wishlist)) {
+            wishlistData = response.wishlist;
+          } else if (Array.isArray(response)) {
+            wishlistData = response;
+          } else {
+            console.log('WishlistSidebar: Response is object but no valid array found');
+            wishlistData = [];
+          }
         } else {
+          console.log('WishlistSidebar: Response is not an object');
           wishlistData = [];
         }
-      } else {
+      } catch (parseError) {
+        console.error('WishlistSidebar: Error parsing response:', parseError);
         wishlistData = [];
       }
       
       console.log('WishlistSidebar: Processed wishlist data:', wishlistData);
       
-      if (Array.isArray(wishlistData)) {
-        setWishlistItems(wishlistData);
-        console.log('WishlistSidebar: Set wishlist items:', wishlistData.length);
-      } else {
-        console.log('WishlistSidebar: Wishlist data is not an array:', wishlistData);
-        setWishlistItems([]);
-      }
+      // Transform and validate each wishlist item
+      const validWishlistItems = wishlistData.filter((item: any) => {
+        if (!item || typeof item !== 'object') {
+          console.log('WishlistSidebar: Invalid item found:', item);
+          return false;
+        }
+        
+        // Check if product data is in productId field (API structure)
+        if (item.productId && typeof item.productId === 'object') {
+          // Transform the structure to match component expectations
+          item.product = item.productId;
+          delete item.productId;
+        }
+        
+        if (!item.product || typeof item.product !== 'object') {
+          console.log('WishlistSidebar: Item missing product:', item);
+          return false;
+        }
+        
+        if (!item.product._id || !item.product.name) {
+          console.log('WishlistSidebar: Product missing required fields:', item.product);
+          return false;
+        }
+        
+        return true;
+      });
+      
+      console.log('WishlistSidebar: Valid wishlist items:', validWishlistItems.length);
+      setWishlistItems(validWishlistItems);
+      
     } catch (error: any) {
       console.error('WishlistSidebar: Failed to fetch wishlist:', error);
       console.error('WishlistSidebar: Error details:', error.response?.data || error.message);
@@ -113,39 +156,53 @@ const WishlistSidebar: React.FC<WishlistSidebarProps> = ({ isOpen, onClose }) =>
   };
 
   const getProductImage = (item: WishlistItem) => {
-    // Check if product has images array
-    if (item.product.images && item.product.images.length > 0) {
-      const firstImage = item.product.images[0];
-      if (firstImage && 
-          !firstImage.includes('example.com') && 
-          !firstImage.includes('placeholder') &&
-          !firstImage.startsWith('blob:')) {
-        return firstImage;
+    try {
+      const product = item.product || item.productId;
+      if (!product) {
+        return 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=120';
       }
+      
+      // Check if product has images array
+      if (product.images && product.images.length > 0) {
+        const firstImage = product.images[0];
+        if (firstImage && 
+            !firstImage.includes('example.com') && 
+            !firstImage.includes('placeholder') &&
+            !firstImage.startsWith('blob:')) {
+          return firstImage;
+        }
+      }
+      
+      // Return placeholder
+      return 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=120';
+    } catch (error) {
+      console.error('WishlistSidebar: Error getting product image:', error);
+      return 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=120';
     }
-    
-    // Check if product has single image
-    if (item.product.image && 
-        !item.product.image.includes('example.com') && 
-        !item.product.image.includes('placeholder') &&
-        !item.product.image.startsWith('blob:')) {
-      return item.product.image;
-    }
-    
-    // Return placeholder
-    return 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=120';
   };
 
   const getProductPrice = (item: WishlistItem) => {
-    return item.product.price || 0;
+    try {
+      const product = item.product || item.productId;
+      if (!product || !product.variants || product.variants.length === 0) {
+        return 0;
+      }
+      
+      // Return the price of the first variant
+      return product.variants[0].price || 0;
+    } catch (error) {
+      console.error('WishlistSidebar: Error getting product price:', error);
+      return 0;
+    }
   };
 
   console.log('WishlistSidebar: Rendering with props:', { isOpen, user: user?.id, loading, error, wishlistItemsCount: wishlistItems.length });
 
-  return (
-    <>
-      <div className={`cart-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}></div>
-      <div className={`sidebar-cart ${isOpen ? 'open' : ''}`}>
+  try {
+    return (
+      <>
+        <div className={`cart-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}></div>
+        <div className={`sidebar-cart ${isOpen ? 'open' : ''}`}>
         <div style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ margin: 0 }}>Wishlist</h3>
@@ -163,43 +220,57 @@ const WishlistSidebar: React.FC<WishlistSidebarProps> = ({ isOpen, onClose }) =>
           ) : wishlistItems.length > 0 ? (
             <List
               dataSource={wishlistItems}
-              renderItem={(item) => (
-                <List.Item>
-                  <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '12px' }}>
-                    <img 
-                      src={getProductImage(item)} 
-                      alt={item.product.name}
-                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=120';
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '500', marginBottom: '4px' }}>{item.product.name}</div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>
-                        ${getProductPrice(item)}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<EyeOutlined />}
-                          onClick={() => handleViewProduct(item.product._id)}
-                          style={{ padding: '0', height: 'auto' }}
-                        >
-                          View
-                        </Button>
-                      </div>
-                    </div>
-                    <Button 
-                      type="text" 
-                      danger 
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleRemoveFromWishlist(item.product._id)}
-                    />
-                  </div>
-                </List.Item>
-              )}
+                              renderItem={(item) => {
+                  try {
+                    // Validate item before rendering
+                    const product = item.product || item.productId;
+                    if (!item || !product || !product._id || !product.name) {
+                      console.log('WishlistSidebar: Skipping invalid item:', item);
+                      return null;
+                    }
+                    
+                    return (
+                      <List.Item key={item._id || product._id}>
+                        <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '12px' }}>
+                          <img 
+                            src={getProductImage(item)} 
+                            alt={product.name}
+                            style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=120';
+                            }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: '500', marginBottom: '4px' }}>{product.name}</div>
+                            <div style={{ color: '#666', fontSize: '14px' }}>
+                              ${getProductPrice(item)}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={<EyeOutlined />}
+                                onClick={() => handleViewProduct(product._id)}
+                                style={{ padding: '0', height: 'auto' }}
+                              >
+                                View
+                              </Button>
+                            </div>
+                          </div>
+                          <Button 
+                            type="text" 
+                            danger 
+                            icon={<DeleteOutlined />}
+                            onClick={() => handleRemoveFromWishlist(product._id)}
+                          />
+                        </div>
+                      </List.Item>
+                    );
+                  } catch (renderError) {
+                    console.error('WishlistSidebar: Error rendering item:', renderError, item);
+                    return null;
+                  }
+                }}
             />
           ) : (
             <div style={{ textAlign: 'center', color: '#666', marginTop: '40px' }}>
@@ -212,24 +283,31 @@ const WishlistSidebar: React.FC<WishlistSidebarProps> = ({ isOpen, onClose }) =>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', marginBottom: '16px' }}>
                 <span>Total Items: {wishlistItems.length}</span>
               </div>
-              <Button 
-                type="primary" 
-                block 
-                size="large"
-                style={{ background: '#E6A623', border: 'none' }}
-                onClick={() => {
-                  // TODO: Implement view all wishlist items page
-                  message.info('View all wishlist items feature coming soon!');
-                }}
-              >
-                View All Items
-              </Button>
+              
             </div>
           )}
         </div>
       </div>
     </>
   );
+  } catch (error) {
+    console.error('WishlistSidebar: Error rendering component:', error);
+    return (
+      <div className={`cart-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}>
+        <div className={`sidebar-cart ${isOpen ? 'open' : ''}`}>
+          <div style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0 }}>Wishlist</h3>
+              <Button type="text" icon={<CloseOutlined />} onClick={onClose} />
+            </div>
+            <div style={{ textAlign: 'center', color: '#666', marginTop: '40px' }}>
+              <p>Error loading wishlist. Please try again.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default WishlistSidebar;

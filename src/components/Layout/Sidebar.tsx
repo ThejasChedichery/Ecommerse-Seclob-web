@@ -82,13 +82,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onCategorySelect, onSubCategorySelect
 
   const fetchSubCategoriesByCategory = async (categoryId: string) => {
     try {
-      console.log('=== Fetching Subcategories ===');
-      console.log('CategoryId:', categoryId);
-      console.log('API call starting...');
       
       const response = await subCategoryAPI.getSubCategoriesByCategory(categoryId);
-      console.log('Subcategories API response:', response);
-      
+   
       const subCategoriesData = response.data || response;
       console.log('Processed subcategories data:', subCategoriesData);
       
@@ -103,10 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCategorySelect, onSubCategorySelect
       
       console.log('Subcategories fetch completed successfully');
     } catch (error: any) {
-      console.error('=== Subcategories Fetch Error ===');
-      console.error('Error details:', error);
-      console.error('Error message:', error.message);
-      console.error('Error response:', error.response);
+    
       
       // Set empty array if no subcategories found
       setSubCategoriesMap(prev => ({

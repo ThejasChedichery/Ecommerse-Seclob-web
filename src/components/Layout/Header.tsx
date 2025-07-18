@@ -1,23 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input, Badge, Button, message } from 'antd';
-import { SearchOutlined, HeartOutlined, ShoppingCartOutlined, UserOutlined } from '@ant-design/icons';
+import { SearchOutlined, HeartOutlined, ShoppingCartOutlined, UserOutlined, CloseOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import WishlistSidebar from '../wishlist/wishlistSidebar';
 
 const Header: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState(searchParams.get('search') || '');
 
   const handleSearch = (value: string) => {
     console.log('Search:', value);
-    // TODO: Implement search functionality
+    if (value.trim()) {
+      // Update URL with search parameter
+      setSearchParams({ search: value.trim() });
+    } else {
+      // Remove search parameter if empty
+      setSearchParams({});
+    }
   };
+
+  const handleSearchButtonClick = () => {
+    handleSearch(searchValue);
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch(searchValue);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchValue('');
+    setSearchParams({});
+  };
+
+  // Sync search value with URL parameters
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearchValue(urlSearch);
+  }, [searchParams]);
 
   const handleSignIn = () => {
     if (isAuthenticated) {
@@ -30,6 +63,7 @@ const Header: React.FC = () => {
 
   const handleWishlistClick = () => {
     console.log('Wishlist button clicked, isAuthenticated:', isAuthenticated);
+    console.log('Current user:', user);
     if (!isAuthenticated) {
       message.error('Please login to view your wishlist');
       return;
@@ -37,6 +71,7 @@ const Header: React.FC = () => {
     console.log('Opening wishlist sidebar for user:', user?.id);
     console.log('Setting isWishlistOpen to true');
     setIsWishlistOpen(true);
+    console.log('isWishlistOpen should now be true');
   };
 
   const handleCartClick = () => {
@@ -61,16 +96,28 @@ const Header: React.FC = () => {
                 placeholder="Search any things"
                 prefix={<SearchOutlined />}
                 suffix={
-                  <Button 
-                    type="primary" 
-                    style={{ background: '#E6A623', border: 'none', borderRadius: '0 6px 6px 0' }}
-                    onClick={() => handleSearch('')}
-                  >
-                    Search
-                  </Button>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {searchValue && (
+                      <Button
+                        type="text"
+                        icon={<CloseOutlined />}
+                        onClick={handleClearSearch}
+                        style={{ marginRight: '4px' }}
+                      />
+                    )}
+                    <Button 
+                      type="primary" 
+                      style={{ background: '#E6A623', border: 'none', borderRadius: '0 6px 6px 0' }}
+                      onClick={handleSearchButtonClick}
+                    >
+                      Search
+                    </Button>
+                  </div>
                 }
                 style={{ borderRadius: '25px' }}
-                onPressEnter={(e) => handleSearch((e.target as HTMLInputElement).value)}
+                value={searchValue}
+                onChange={handleSearchInputChange}
+                onPressEnter={handleSearchKeyPress}
               />
             </div>
             <div className="col-md-6 text-end">

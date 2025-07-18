@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Pagination, Select, Card, Row, Col, Typography, Spin, Empty, message, Input, Modal, Form, Upload, Space } from 'antd';
 import { PlusOutlined, UserOutlined, ShoppingOutlined, HeartOutlined, SearchOutlined, CameraOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import { RootState } from '../store';
 import ProductCard from '../components/Product/ProductCard';
 import Sidebar from '../components/Layout/Sidebar';
@@ -39,6 +40,7 @@ const { Title, Text } = Typography;
 
 const Home: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const [searchParams] = useSearchParams();
   
   // Local state for products and pagination
   const [products, setProducts] = useState<Product[]>([]);
@@ -49,7 +51,9 @@ const Home: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All categories');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Get search query from URL
+  const searchQuery = searchParams.get('search') || '';
   
   // Add Product Modal State
   const [isAddProductModalVisible, setIsAddProductModalVisible] = useState(false);
@@ -114,7 +118,7 @@ const Home: React.FC = () => {
       if (selectedSubCategory) {
         apiParams.subCategory = selectedSubCategory;
       }
-      
+  
       
       const response = await productAPI.getAllProducts(apiParams);
       
@@ -291,11 +295,10 @@ const Home: React.FC = () => {
     }
   };
 
-  // Watch for changes in selectedSubCategory and searchQuery
+  // Watch for changes in selectedSubCategory and searchParams
   useEffect(() => {
-   
     fetchProducts(1, pageSize);
-  }, [selectedSubCategory, searchQuery]);
+  }, [selectedSubCategory, searchParams]);
   
   // Handle pagination change
   const handlePageChange = (page: number, size?: number) => {
@@ -319,18 +322,13 @@ const Home: React.FC = () => {
   };
   
   // Handle subcategory selection from sidebar
-  const handleSubCategorySelect = ( subCategoryId: string) => {
-   
-    // Update state - useEffect will handle the API call
+  const handleSubCategorySelect = (subCategoryName: string, subCategoryId: string) => {
+    console.log('Subcategory selected:', subCategoryName, 'ID:', subCategoryId);
+    // Update state with the subcategory ID - useEffect will handle the API call
     setSelectedSubCategory(subCategoryId);
   };
 
-  // Handle search
-  const handleSearch = (value: string) => {
-    console.log('Search query:', value);
-    setSearchQuery(value);
-    // useEffect will handle the API call
-  };
+
 
   return (
     <div className="container-fluid">
@@ -381,20 +379,16 @@ const Home: React.FC = () => {
 
           {/* Products Section */}
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <Title level={3}>Featured Products</Title>
-                <Text type="secondary">Discover our latest collection of amazing products</Text>
-              </div>
-              <div style={{ width: '300px' }}>
-                <Input
-                  placeholder="Search products..."
-                  prefix={<SearchOutlined />}
-                  allowClear
-                  onPressEnter={(e) => handleSearch((e.target as HTMLInputElement).value)}
-                  onBlur={(e) => handleSearch(e.target.value)}
-                />
-              </div>
+            <div style={{ marginBottom: '16px' }}>
+              <Title level={3}>
+                {searchQuery ? `Search Results for "${searchQuery}"` : 'Featured Products'}
+              </Title>
+              <Text type="secondary">
+                {searchQuery 
+                  ? `Found ${products.length} products matching your search`
+                  : 'Discover our latest collection of amazing products'
+                }
+              </Text>
             </div>
           </div>
 
